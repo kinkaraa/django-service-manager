@@ -1,15 +1,19 @@
 from django.contrib import admin
 
+from unfold.admin import ModelAdmin
+from unfold.decorators import display
+
 from .models import Service
 
 
 @admin.register(Service)
-class ServiceAdmin(admin.ModelAdmin):
-    list_display = ('name', 'service_type', 'pid', 'port', 'order', 'is_running')
+class ServiceAdmin(ModelAdmin):
+    list_display = ('name', 'service_type', 'pid', 'port', 'order', 'display_is_running')
     list_editable = ('order',)
     search_fields = ('name', 'command', 'working_dir')
     list_filter = ('service_type', 'pid',)
-    
+    list_fullwidth = True
+
     fieldsets = (
         ('Basic Info', {
             'fields': ('name', 'service_type', 'order', 'port')
@@ -27,9 +31,11 @@ class ServiceAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
-    
+
     readonly_fields = ('pid',)
-    
-    def is_running(self, obj):
-        return '✅ Running' if obj.is_running() else '❌ Stopped'
-    is_running.short_description = 'Status'
+
+    @display(description='Status', header=True)
+    def display_is_running(self, obj):
+        if obj.is_running():
+            return 'Running', 'success'
+        return 'Stopped', 'danger'
