@@ -33,9 +33,19 @@ class ServiceAdmin(ModelAdmin):
     )
 
     readonly_fields = ('pid',)
+    actions = ['duplicate_service']
 
     @display(description='Status', header=True)
     def display_is_running(self, obj):
         if obj.is_running():
             return 'Running', 'success'
         return 'Stopped', 'danger'
+
+    @admin.action(description='Duplicate selected services')
+    def duplicate_service(self, request, queryset):
+        for obj in queryset:
+            obj.pk = None
+            obj.pid = None
+            obj.name = f'{obj.name} (copy)'
+            obj.save()
+        self.message_user(request, f'{queryset.count()} service(s) duplicated.')
